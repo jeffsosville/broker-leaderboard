@@ -63,9 +63,12 @@ for idx, row in enumerate(filtered_df.itertuples(), start=1):
     else:
         medal = f"{idx}."
 
+    tags_formatted = " ".join([f"<code>{tag}</code>" for tag in row.expertise_tags])
+
     st.markdown(f"""
-**{medal} {row.broker_name}**  _({row.region})_   🏆 **{row.leaderboard_score} pts**  
-`Tags:` {', '.join(row.expertise_tags)}  
-**Active:** {row.active_listings} | **Sold (6mo):** {row.sold_last_6_months} | **Response:** {row.response_score}%  
----
-""")
+<div style='padding:10px; border:1px solid #444; border-radius:6px; margin-bottom:12px; font-size:14px; line-height:1.5'>
+<b>{medal} {row.broker_name}</b> <i>({row.region})</i> — <b>{row.leaderboard_score} pts</b><br>
+<span style='color:#aaa;'>{tags_formatted}</span><br>
+<strong>Active:</strong> {row.active_listings} &nbsp; | &nbsp; <strong>Sold (6mo):</strong> {row.sold_last_6_months} &nbsp; | &nbsp; <strong>Response:</strong> {row.response_score}%
+</div>
+""", unsafe_allow_html=True)
