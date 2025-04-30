@@ -50,7 +50,7 @@ elif sort_option == "Active Listings":
     filtered_df = filtered_df.sort_values(by='active_listings', ascending=False)
 
 # --- Display Leaderboard ---
-st.title("🏆 Broker Leaderboard")
+st.title("🏆 Glengarry Top 100")
 
 for idx, row in enumerate(filtered_df.itertuples(), start=1):
     # Medal for Top 3
