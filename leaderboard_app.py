@@ -4,10 +4,8 @@ from supabase import create_client
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
+# --- Environment Variables ---
 load_dotenv()
-
-# Supabase connection
 SUPABASE_URL = f"https://{os.getenv('SUPABASE_HOST')}"
 SUPABASE_KEY = os.getenv('SUPABASE_API_KEY')
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -31,8 +29,8 @@ df = load_data()
 
 # --- Sidebar Filters ---
 st.sidebar.title("🎛️ Filters & Search")
-region_filter = st.sidebar.selectbox("🌎 Region", options=["All"] + sorted(df['region'].unique()))
-all_tags = sorted(set(tag for sublist in df['expertise_tags'] for tag in sublist))
+region_filter = st.sidebar.selectbox("🌎 Region", options=["All"] + sorted(df['region'].dropna().unique()))
+all_tags = sorted(set(tag for tags in df['expertise_tags'].dropna() for tag in tags))
 expertise_filter = st.sidebar.multiselect("🏷️ Expertise Tags", options=all_tags)
 
 search_query = st.sidebar.text_input("🔍 Search Broker or Company")
@@ -64,9 +62,9 @@ filtered_df = filtered_df.head(100)
 st.title("🏆 Glengarry Top 100")
 st.markdown(f"### Showing Top {len(filtered_df)} Brokers")
 
-# Use iterrows to allow column access as dict
+# Use iterrows for reliable key access
 for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
-    # Medal for Top 3
+    # Medal icons
     if idx == 1:
         medal = "🥇"
     elif idx == 2:
@@ -76,18 +74,22 @@ for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
     else:
         medal = f"{idx}."
 
-    tags_formatted = " ".join([f"<code>{tag}</code>" for tag in row['expertise_tags']])
+    # Format expertise tags
+    tags_formatted = " ".join([f"<code>{tag}</code>" for tag in row['expertise_tags']]) if pd.notnull(row['expertise_tags']) else ""
 
-    # Create broker name link if URL exists
-    if pd.notnull(row.get("companyUrl", None)):
+    # Clickable broker name if companyUrl exists
+    if pd.notnull(row.get("companyUrl", "")) and row["companyUrl"].strip() != "":
         broker_display = f'<b>{medal} <a href="{row["companyUrl"]}" target="_blank">{row["broker_name"]}</a></b>'
     else:
         broker_display = f'<b>{medal} {row["broker_name"]}</b>'
 
+    # Render HTML block
     st.markdown(f"""
 <div style='padding:10px; border:1px solid #444; border-radius:6px; margin-bottom:12px; font-size:14px; line-height:1.5'>
 {broker_display} <i>({row["region"]})</i> — <b>{row["leaderboard_score"]} pts</b><br>
 <span style='color:#aaa;'>{tags_formatted}</span><br>
-<strong>Active:</strong> {row["active_listings"]} &nbsp; | &nbsp; <strong>Sold (6mo):</strong> {row["sold_last_6_months"]} &nbsp; | &nbsp; <strong>Response:</strong> {row["response_score"]}%
+<strong>Active:</strong> {row["active_listings"]} &nbsp; | &nbsp; 
+<strong>Sold (6mo):</strong> {row["sold_last_6_months"]} &nbsp; | &nbsp; 
+<strong>Response:</strong> {row["response_score"]}%
 </div>
 """, unsafe_allow_html=True)
