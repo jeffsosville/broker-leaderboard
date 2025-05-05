@@ -64,6 +64,7 @@ filtered_df = filtered_df.head(100)
 st.title("🏆 Glengarry Top 100")
 st.markdown(f"### Showing Top {len(filtered_df)} Brokers")
 
+# Use iterrows to allow column access as dict
 for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
     # Medal for Top 3
     if idx == 1:
@@ -75,13 +76,18 @@ for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
     else:
         medal = f"{idx}."
 
-    tags_formatted = " ".join([f"<code>{tag}</code>" for tag in row.expertise_tags])
+    tags_formatted = " ".join([f"<code>{tag}</code>" for tag in row['expertise_tags']])
+
+    # Create broker name link if URL exists
+    if pd.notnull(row.get("companyUrl", None)):
+        broker_display = f'<b>{medal} <a href="{row["companyUrl"]}" target="_blank">{row["broker_name"]}</a></b>'
+    else:
+        broker_display = f'<b>{medal} {row["broker_name"]}</b>'
 
     st.markdown(f"""
 <div style='padding:10px; border:1px solid #444; border-radius:6px; margin-bottom:12px; font-size:14px; line-height:1.5'>
-{f'<b>{medal} <a href="{row.companyurl}" target="_blank">{row.broker_name}</a></b>' if row.companyurl else f'<b>{medal} {row.broker_name}</b>'} <i>({row.region})</i> — <b>{row.leaderboard_score} pts</b><br>
-<strong>Active:</strong> {row.active_listings} &nbsp; | &nbsp; <strong>Sold (6mo):</strong> {row.sold_last_6_months} &nbsp; | &nbsp; <strong>Response:</strong> {row.response_score}%
+{broker_display} <i>({row["region"]})</i> — <b>{row["leaderboard_score"]} pts</b><br>
+<span style='color:#aaa;'>{tags_formatted}</span><br>
+<strong>Active:</strong> {row["active_listings"]} &nbsp; | &nbsp; <strong>Sold (6mo):</strong> {row["sold_last_6_months"]} &nbsp; | &nbsp; <strong>Response:</strong> {row["response_score"]}%
 </div>
 """, unsafe_allow_html=True)
-
-
