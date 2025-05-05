@@ -84,3 +84,8 @@ for idx, row in enumerate(filtered_df.itertuples(), start=1):
 <strong>Active:</strong> {row.active_listings} &nbsp; | &nbsp; <strong>Sold (6mo):</strong> {row.sold_last_6_months} &nbsp; | &nbsp; <strong>Response:</strong> {row.response_score}%
 </div>
 """, unsafe_allow_html=True)
+    # DEBUG: Show sample of Supabase table
+st.subheader("🔎 Debug: Supabase Structure Preview")
+st.write(df.head())
+st.code(df.columns.tolist(), language="python")
+
