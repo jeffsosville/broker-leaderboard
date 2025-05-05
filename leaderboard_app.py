@@ -18,10 +18,14 @@ def load_data():
     response = supabase.table('brokers').select("*").execute()
     df = pd.DataFrame(response.data)
 
-    # ✅ Deduplicate by broker + company name
+    # ❌ Block all Cagnettas (case-insensitive)
+    df = df[~df['broker_name'].str.lower().str.contains("cagnetta")]
+
+    # ✅ Deduplicate by broker + company
     df = df.drop_duplicates(subset=['broker_name', 'company_name'])
 
     return df
+
 
 df = load_data()
 
