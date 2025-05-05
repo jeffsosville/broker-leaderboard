@@ -17,6 +17,10 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 def load_data():
     response = supabase.table('brokers').select("*").execute()
     df = pd.DataFrame(response.data)
+
+    # ✅ Deduplicate by broker + company name
+    df = df.drop_duplicates(subset=['broker_name', 'company_name'])
+
     return df
 
 df = load_data()
@@ -49,8 +53,12 @@ if sort_option == "Leaderboard Score":
 elif sort_option == "Active Listings":
     filtered_df = filtered_df.sort_values(by='active_listings', ascending=False)
 
+# ✅ Limit to Top 100
+filtered_df = filtered_df.head(100)
+
 # --- Display Leaderboard ---
 st.title("🏆 Glengarry Top 100")
+st.markdown(f"### Showing Top {len(filtered_df)} Brokers")
 
 for idx, row in enumerate(filtered_df.itertuples(), start=1):
     # Medal for Top 3
