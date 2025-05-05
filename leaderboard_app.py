@@ -64,7 +64,7 @@ filtered_df = filtered_df.head(100)
 st.title("🏆 Glengarry Top 100")
 st.markdown(f"### Showing Top {len(filtered_df)} Brokers")
 
-for idx, row in enumerate(filtered_df.itertuples(), start=1):
+for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
     # Medal for Top 3
     if idx == 1:
         medal = "🥇"
