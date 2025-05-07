@@ -43,7 +43,7 @@ if broker_id is None:
     
 st.write("Columns in dataframe:", filtered_df.columns.tolist())
 
-    for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
+for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
         if idx == 1:
             medal = "🥇"
         elif idx == 2:
