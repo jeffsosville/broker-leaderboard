@@ -20,7 +20,7 @@ def load_data():
 df = load_data()
 
 # ✅ Sort by listings_count descending
-df = df.sort_values(by='listings_count', ascending=False).head(100)
+df = df.sort_values(by='active_listings', ascending=False).head(100)
 
 # --- UI config ---
 st.set_page_config(page_title="The Glengarry 100", layout="wide")
@@ -63,6 +63,6 @@ for idx, (_, row) in enumerate(df.iterrows(), start=1):
     <div class="leaderboard-item">
         <span class="rank-number">{medal}</span> {company_link} — {listings_link}<br>
         <strong>Broker:</strong> {row.get("name", "N/A")}<br>
-        <strong>Active Listings:</strong> {row.get("listings_count", 0)}
+        <strong>Active Listings:</strong> {row.get("listings_", 0)}
     </div>
     """, unsafe_allow_html=True)
