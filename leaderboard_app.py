@@ -27,13 +27,14 @@ st.markdown("""
 <style>
 body { background: #f9f9f9; font-family: system-ui, sans-serif; color: #222; }
 h1 { color: orange; }
-.leaderboard-item { background:#fff; padding:15px; margin-bottom:12px; border-radius:8px; border:1px solid #ddd; }
+.leaderboard-item { background:#fff; padding:20px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd; color: #222; }
 .company-link { font-weight: bold; color: #0077cc; text-decoration: none; }
 .company-link:hover { text-decoration: underline; }
 .listings-link { font-weight: bold; color: #FF6600; text-decoration: none; }
 .rank-number { font-weight: bold; color: orange; margin-right: 6px; }
 </style>
 """, unsafe_allow_html=True)
+
 
 st.markdown("<h1>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
 
