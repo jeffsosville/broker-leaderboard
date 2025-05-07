@@ -4,7 +4,7 @@ from supabase import create_client
 import os
 from dotenv import load_dotenv
 
-# --- Load environment variables ---
+# --- Load environment variables ---¯
 load_dotenv()
 SUPABASE_URL = f"https://{os.getenv('SUPABASE_HOST')}"
 SUPABASE_KEY = os.getenv('SUPABASE_API_KEY')
@@ -19,8 +19,6 @@ def load_data():
 
 df = load_data()
 filtered_df = df
-params = st.query_params
-broker_id = params.get('broker_id', [None])[0]
 
 
 # Sort by leaderboard_score descending
@@ -96,48 +94,35 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if broker_id is None:
-    st.markdown("<h1>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
 
-    for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
-        # Medal emoji
-        if idx == 1:
-            medal = "🥇"
-        elif idx == 2:
-            medal = "🥈"
-        elif idx == 3:
-            medal = "🥉"
-        else:
-            medal = f"{idx}."
-
-        # 🏆 Put back your original working lines here:
-        company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>'
-        listings_link = f'<a class="listings-link" href="?broker_id={row["id"]}">View Listings</a>'
-        city = row.get("city", "N/A")
-        state = row.get("state", "N/A")
-        phone = row.get("phone", "N/A")
-
-        st.markdown(f"""
-        <div class="leaderboard-item">
-        <span class="company-title"><b>{medal} {company_link}</b></span>
-        | {city}, {state} | {phone}<br>
-        Active: {row["active_listings"]} | Sold: {row["sold_listings"]} | Score: {row["leaderboard_score"]} | {listings_link}
-        </div>
-        """, unsafe_allow_html=True)
-
- 
-
-else:
-    broker = supabase.table('brokers_leaderboard').select('*').eq('id', broker_id).single().execute().data
-    st.title(f"📂 Listings for {broker['broker_name']}")
-
-    listings = supabase.table('listings').select('*').eq('broker_id', broker_id).execute().data
-    df_listings = pd.DataFrame(listings)
-
-    if df_listings.empty:
-        st.info("No listings available yet for this broker.")
+for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
+    if idx == 1:
+        medal = "🥇"
+    elif idx == 2:
+        medal = "🥈"
+    elif idx == 3:
+        medal = "🥉"
     else:
-        st.table(df_listings[['title', 'price', 'net_income', 'location', 'listing_url']])
+        medal = f"{idx}."
 
-    st.markdown("[⬅️ Back to Leaderboard](/)")
+    company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>'
+    listings_link = f'<a class="listings-link" href="{row["listings_url"]}" target="_blank">View Listings</a>'
+    city = row.get("city", "N/A")
+    state = row.get("state", "N/A")
+    phone = row.get("phone", "N/A")
+
+    st.markdown(f"""
+    <div class="leaderboard-item">
+    <span class="company-title"><b>{medal} {company_link}</b></span>
+    | {city}, {state} | {phone}<br>
+    Active: {row["active_listings"]} | Sold: {row["sold_listings"]} | Score: {row["leaderboard_score"]} | {listings_link}
+    </div>
+    """, unsafe_allow_html=True)
+
+   
+
+
+
+
 
