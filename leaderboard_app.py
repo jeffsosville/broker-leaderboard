@@ -71,6 +71,7 @@ st.markdown("""
 .company-title {
     white-space: nowrap;
     display: inline-flex;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 4px;
 }
