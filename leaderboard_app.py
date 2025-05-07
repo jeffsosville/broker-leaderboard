@@ -75,6 +75,14 @@ st.markdown("""
     align-items: center;
     gap: 4px;
 }
+@media (max-width: 600px) {
+    .company-title {
+        display: inline-flex;
+        white-space: nowrap;
+        align-items: center;
+        gap: 4px;
+    }
+}
 
 </style>
 """, unsafe_allow_html=True)
