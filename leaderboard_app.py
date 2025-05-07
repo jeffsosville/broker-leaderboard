@@ -97,7 +97,7 @@ for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
 
     st.markdown(f"""
 <div class="leaderboard-item">
-<b>{medal} {company_link}</b> — {city}, {state} | {phone} | {email}<br>
+<b>{medal} {company_link}</b> {city}, {state} | {phone} | {email}<br>
 Active: {row["active_listings"]} | Sold: {row["sold_listings"]} | Score: {row["leaderboard_score"]} | {listings_link}
 </div>
 """, unsafe_allow_html=True)
