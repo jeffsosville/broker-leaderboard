@@ -13,14 +13,23 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 # --- Load Data ---
 @st.cache_data
 def load_data():
-    response = supabase.table('brokers').select("*").execute()
+    response = supabase.table('brokers1').select("*").execute()
     df = pd.DataFrame(response.data)
 
-    # ❌ Block all Cagnettas (case-insensitive)
-    df = df[~df['broker_name'].str.lower().str.contains("cagnetta", na=False)]
+    df = df.rename(columns={
+        'name': 'broker_name',
+        'companyname': 'company_name',
+        'nichetag': 'expertise_tags',
+        'companyurl': 'companyUrl',
+        'listings_count': 'active_listings'
+    })
 
-    # ✅ Deduplicate by broker + company
-    df = df.drop_duplicates(subset=['broker_name', 'company_name'])
+    df['region'] = 'N/A'
+    df['sold_last_6_months'] = 0
+    df['response_score'] = 0
+    df['leaderboard_score'] = df['active_listings']
+
+    df['expertise_tags'] = df['expertise_tags'].apply(lambda x: [x] if pd.notnull(x) else [])
 
     return df
 
