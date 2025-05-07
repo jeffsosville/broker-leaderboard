@@ -18,6 +18,7 @@ def load_data():
     return df
 
 df = load_data()
+filtered_df = df
 
 # Sort by leaderboard_score descending
 df = df.sort_values(by='leaderboard_score', ascending=False).head(100)
