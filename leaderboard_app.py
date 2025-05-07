@@ -13,7 +13,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 # --- Load Data ---
 @st.cache_data
 def load_data():
-    response = supabase.table('brokers1').select("*").execute()
+    response = supabase.table('brokersleaderboard').select("*").execute()
     df = pd.DataFrame(response.data)
 
     # Rename to normalized keys
