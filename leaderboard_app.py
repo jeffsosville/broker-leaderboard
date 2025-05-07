@@ -19,6 +19,9 @@ def load_data():
 
 df = load_data()
 filtered_df = df
+params = st.experimental_get_query_params()
+broker_id = params.get('broker_id', [None])[0]
+
 
 # Sort by leaderboard_score descending
 df = df.sort_values(by='leaderboard_score', ascending=False).head(100)
@@ -93,34 +96,41 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+if broker_id is None:
+    st.markdown("<h1>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
 
-st.markdown("<h1>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
+    for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
+        # Medal emoji
+        if idx == 1:
+            medal = "🥇"
+        elif idx == 2:
+            medal = "🥈"
+        elif idx == 3:
+            medal = "🥉"
+        else:
+            medal = f"{idx}."
 
-for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
-    # Medal emoji
-    if idx == 1:
-        medal = "🥇"
-    elif idx == 2:
-        medal = "🥈"
-    elif idx == 3:
-        medal = "🥉"
+        company_link = ...
+        listings_link = ...
+        city = ...
+        ...
+
+        st.markdown(f"""
+        <div class="leaderboard-item">
+        ...
+        """, unsafe_allow_html=True)
+
+else:
+    broker = supabase.table('brokers_leaderboard').select('*').eq('id', broker_id).single().execute().data
+    st.title(f"📂 Listings for {broker['broker_name']}")
+
+    listings = supabase.table('listings').select('*').eq('broker_id', broker_id).execute().data
+    df_listings = pd.DataFrame(listings)
+
+    if df_listings.empty:
+        st.info("No listings available yet for this broker.")
     else:
-        medal = f"{idx}."
+        st.table(df_listings[['title', 'price', 'net_income', 'location', 'listing_url']])
 
-    # Safe fallbacks
-    company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>'
-    listings_link = f'<a class="listings-link" href="{row["listings_url"]}" target="_blank">View Listings</a>'
-    city = row.get("city", "N/A")
-    state = row.get("state", "N/A")
-    phone = row.get("phone", "N/A")
-   
-
-
-    st.markdown(f"""
-<div class="leaderboard-item">
-<span class="company-title"><b>{medal} {company_link}</b></span>
-| {city}, {state} | {phone}<br>
-Active: {row["active_listings"]} | Sold: {row["sold_listings"]} | Score: {row["leaderboard_score"]} | {listings_link}
-</div>
-""", unsafe_allow_html=True)
+    st.markdown("[⬅️ Back to Leaderboard](/)")
 
