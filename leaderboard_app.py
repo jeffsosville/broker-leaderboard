@@ -110,15 +110,22 @@ if broker_id is None:
         else:
             medal = f"{idx}."
 
-        company_link = ...
-        listings_link = ...
-        city = ...
-        ...
+        # 🏆 Put back your original working lines here:
+        company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>'
+        listings_link = f'<a class="listings-link" href="?broker_id={row["id"]}">View Listings</a>'
+        city = row.get("city", "N/A")
+        state = row.get("state", "N/A")
+        phone = row.get("phone", "N/A")
 
         st.markdown(f"""
         <div class="leaderboard-item">
-        ...
+        <span class="company-title"><b>{medal} {company_link}</b></span>
+        | {city}, {state} | {phone}<br>
+        Active: {row["active_listings"]} | Sold: {row["sold_listings"]} | Score: {row["leaderboard_score"]} | {listings_link}
+        </div>
         """, unsafe_allow_html=True)
+
+ 
 
 else:
     broker = supabase.table('brokers_leaderboard').select('*').eq('id', broker_id).single().execute().data
