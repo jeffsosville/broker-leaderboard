@@ -93,13 +93,12 @@ for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
     city = row.get("city", "N/A")
     state = row.get("state", "N/A")
     phone = row.get("phone", "N/A")
-    email_val = row.get("email", "N/A")
-    email = f'<a href="mailto:{email_val}">{email_val}</a>' if email_val != "N/A" else "N/A"
+   
 
 
     st.markdown(f"""
 <div class="leaderboard-item">
-<b>{medal} {company_link}</b> | {city}, {state} | {phone} | {email}<br>
+<b>{medal} {company_link}</b> | {city}, {state} | {phone}<br>
 Active: {row["active_listings"]} | Sold: {row["sold_listings"]} | Score: {row["leaderboard_score"]} | {listings_link}
 </div>
 """, unsafe_allow_html=True)
