@@ -40,6 +40,7 @@ st.markdown("""
 # ✅ MAIN LOGIC
 if broker_id is None:
     st.markdown("<h1>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
+    
 st.write("Columns in dataframe:", filtered_df.columns.tolist())
 
     for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
