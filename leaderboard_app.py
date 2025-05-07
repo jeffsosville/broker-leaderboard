@@ -54,7 +54,7 @@ for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
             medal = f"{idx}."
 
         company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>'
-        listings_link = f'<a class="listings-link" href="?broker_id={row["id"]}">View Listings</a>'
+        listings_link = f'<a class="listings-link" href="?broker_id={row["companyurl"]}">View Listings</a>'
         city = row.get("city", "N/A")
         state = row.get("state", "N/A")
         phone = row.get("phone", "N/A")
