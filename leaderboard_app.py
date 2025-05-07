@@ -19,61 +19,51 @@ def load_data():
 
 df = load_data()
 
-# --- Sidebar Filters ---
-st.sidebar.title("🎛️ Search & Sort")
-search_query = st.sidebar.text_input("🔍 Search Broker or Company")
-sort_option = st.sidebar.selectbox("📊 Sort By", options=["Leaderboard Score", "Active Listings"])
+# --- Sort by leaderboard_score or active_listings ---
+if 'leaderboard_score' in df.columns:
+    df = df.sort_values(by='leaderboard_score', ascending=False)
+else:
+    df = df.sort_values(by='active_listings', ascending=False)
 
-# --- Apply Filters ---
-filtered_df = df.copy()
+df = df.head(100)
 
-if search_query:
-    filtered_df = filtered_df[
-        filtered_df['broker_name'].str.contains(search_query, case=False, na=False) |
-        filtered_df['company_name'].str.contains(search_query, case=False, na=False)
-    ]
+# --- Display leaderboard ---
+st.set_page_config(page_title="The Glengarry 100", layout="wide")
 
-# --- Sorting ---
-if sort_option == "Leaderboard Score" and 'leaderboard_score' in filtered_df.columns:
-    filtered_df = filtered_df.sort_values(by='leaderboard_score', ascending=False)
-elif sort_option == "Active Listings":
-    filtered_df = filtered_df.sort_values(by='active_listings', ascending=False)
-
-# ✅ Limit to Top 100
-filtered_df = filtered_df.head(100)
-
-# --- Display Leaderboard ---
-st.title("🏆 Glengarry Top 100")
-st.markdown(f"### Showing Top {len(filtered_df)} Brokers")
-
-for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
-    # 🥇 Medal Icons
-    if idx == 1:
-        medal = "🥇"
-    elif idx == 2:
-        medal = "🥈"
-    elif idx == 3:
-        medal = "🥉"
-    else:
-        medal = f"{idx}."
-
-    # ✅ Company name with link
-    company_link = f'<a href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>' if pd.notnull(row["companyurl"]) and row["companyurl"].strip() else row["company_name"]
-
-    # ✅ Listings link
-    listings_link = f'(<a href="{row["listings_url"]}" target="_blank">listings</a>)' if pd.notnull(row["listings_url"]) and row["listings_url"].strip() else ""
-
-    # ✅ Broker name
-    broker_name = row["broker_name"]
-
-    # ✅ Active listings
-    active_listings = row["active_listings"]
-
-    # --- Render card ---
-    st.markdown(f"""
-<div style='padding:10px; border:1px solid #444; border-radius:6px; margin-bottom:12px; font-size:14px; line-height:1.5'>
-<b>{medal} {company_link} {listings_link}</b><br>
-<strong>{broker_name}</strong><br>
-Active Listings: <b>{active_listings}</b>
-</div>
+st.markdown("""
+    <style>
+    body {
+        background-color: #f9f9f9;
+    }
+    .rank { color: orange; font-weight: bold; }
+    .card {
+        padding: 10px;
+        margin-bottom: 12px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    .company-link { font-weight: bold; color: #0056b3; text-decoration: none; }
+    .company-link:hover { text-decoration: underline; }
+    </style>
 """, unsafe_allow_html=True)
+
+st.markdown("<h1 style='color: orange;'>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
+
+for idx, (_, row) in enumerate(df.iterrows(), start=1):
+    medal = "🥇" if idx == 1 else "🥈" if idx == 2 else "🥉" if idx == 3 else f"{idx}."
+    
+    company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>' if pd.notnull(row["companyurl"]) and row["companyurl"].strip() else row["company_name"]
+    
+    city_state = f"({row['city']}, {row['state']})" if pd.notnull(row['city']) and pd.notnull(row['state']) else ""
+    
+    total_listings = int(row['active_listings']) + int(row['sold_listings']) if pd.notnull(row['active_listings']) and pd.notnull(row['sold_listings']) else row['active_listings']
+    
+    st.markdown(f"""
+    <div class="card">
+        <span class="rank">{medal}</span> {company_link} — {row['broker_name']} {city_state}<br>
+        <span style="color: #666;">[ Active: {row['active_listings']} | Sold: {row['sold_listings']} | Total: {total_listings} ]</span>
+    </div>
+    """, unsafe_allow_html=True)
