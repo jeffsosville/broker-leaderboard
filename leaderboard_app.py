@@ -38,21 +38,29 @@ h1 { color: orange; }
 
 st.markdown("<h1>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
 
-for idx, row in df.iterrows():
-    medal = {0: "🥇", 1: "🥈", 2: "🥉"}.get(idx, f"{idx+1}.")
+for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
+    # Medal emoji
+    if idx == 1:
+        medal = "🥇"
+    elif idx == 2:
+        medal = "🥈"
+    elif idx == 3:
+        medal = "🥉"
+    else:
+        medal = f"{idx}."
 
-    company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>' if pd.notnull(row["companyurl"]) else row["company_name"]
-    listings_link = f'<a class="listings-link" href="{row["listings_url"]}" target="_blank">View Listings</a>' if pd.notnull(row["listings_url"]) else "No Listings Link"
+    # Safe fallbacks
+    company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>'
+    listings_link = f'<a class="listings-link" href="{row["listings_url"]}" target="_blank">View Listings</a>'
+    city = row.get("city", "N/A")
+    state = row.get("state", "N/A")
+    phone = row.get("phone", "N/A")
+    email = row.get("email", "N/A")
 
     st.markdown(f"""
-    <div class="leaderboard-item">
-        <span class="rank-number">{medal}</span> {company_link} — {listings_link}<br>
-        <strong>Broker:</strong> {row.get("broker_name", "N/A")}<br>
-        <strong>City:</strong> {row.get("city", "N/A")} &nbsp; | &nbsp; <strong>State:</strong> {row.get("state", "N/A")}<br>
-        <strong>Active Listings:</strong> {int(row.get("active_listings", 0))} &nbsp; | &nbsp;
-        <strong>Sold Listings:</strong> {int(row.get("sold_listings", 0))}<br>
-        <strong>Email:</strong> {row.get("email", "N/A")} &nbsp; | &nbsp; <strong>Phone:</strong> {row.get("phone", "N/A")}<br>
-        <strong>Leaderboard Score:</strong> {row.get("leaderboard_score", "N/A")}<br>
-        <strong>Alternative URL:</strong> {row.get("alternative_url", "N/A")}
-    </div>
-    """, unsafe_allow_html=True)
+<div class="leaderboard-item">
+<b>{medal} {company_link}</b> — {city}, {state} | {phone} | {email}<br>
+Active: {row["active_listings"]} | Sold: {row["sold_listings"]} | Score: {row["leaderboard_score"]} | {listings_link}
+</div>
+""", unsafe_allow_html=True)
+
