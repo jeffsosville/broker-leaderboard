@@ -26,13 +26,50 @@ df = df.sort_values(by='leaderboard_score', ascending=False).head(100)
 st.set_page_config(page_title="The Glengarry 100", layout="wide")
 st.markdown("""
 <style>
-body { background: #f9f9f9; font-family: system-ui, sans-serif; color: #222; }
-h1 { color: orange; }
-.leaderboard-item { background:#111; padding:20px; margin-bottom:15px; border-radius:8px; border:1px solid #333; color: #eee; }
-.company-link { font-weight: bold; color: #0077cc; text-decoration: none; }
-.company-link:hover { text-decoration: underline; }
-.listings-link { font-weight: bold; color: #FF6600; text-decoration: none; }
-.rank-number { font-weight: bold; color: orange; margin-right: 6px; }
+.leaderboard-item {
+    background: #111;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    color: #ddd;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.company-link { 
+    font-weight: bold; 
+    color: #3399ff; 
+    text-decoration: none; 
+}
+
+.company-link:hover { 
+    text-decoration: underline; 
+}
+
+.listings-link { 
+    font-weight: bold; 
+    color: #FF6600; 
+    text-decoration: none; 
+}
+
+.rank-number { 
+    font-weight: bold; 
+    color: orange; 
+    margin-right: 4px; 
+}
+
+@media (max-width: 600px) {
+    .leaderboard-item {
+        font-size: 13px;
+        padding: 10px;
+    }
+    .company-link, .listings-link {
+        display: block;
+        margin-top: 4px;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
