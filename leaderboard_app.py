@@ -13,45 +13,20 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 # --- Load Data ---
 @st.cache_data
 def load_data():
-    response = supabase.table('brokers1').select("*").execute()
+    response = supabase.table('brokers_leaderboard').select("*").execute()
     df = pd.DataFrame(response.data)
-
-    df = df.rename(columns={
-        'name': 'broker_name',
-        'companyname': 'company_name',
-        'nichetag': 'expertise_tags',
-        'companyurl': 'companyUrl',
-        'listings_count': 'active_listings'
-    })
-
-    df['region'] = 'N/A'
-    df['sold_last_6_months'] = 0
-    df['response_score'] = 0
-    df['leaderboard_score'] = df['active_listings']
-
-    df['expertise_tags'] = df['expertise_tags'].apply(lambda x: [x] if pd.notnull(x) else [])
-
     return df
-
 
 df = load_data()
 
 # --- Sidebar Filters ---
-st.sidebar.title("🎛️ Filters & Search")
-region_filter = st.sidebar.selectbox("🌎 Region", options=["All"] + sorted(df['region'].dropna().unique()))
-all_tags = sorted(set(tag for tags in df['expertise_tags'].dropna() if isinstance(tags, list) for tag in tags))
-expertise_filter = st.sidebar.multiselect("🏷️ Expertise Tags", options=all_tags)
+st.sidebar.title("🎛️ Search & Sort")
 search_query = st.sidebar.text_input("🔍 Search Broker or Company")
 sort_option = st.sidebar.selectbox("📊 Sort By", options=["Leaderboard Score", "Active Listings"])
 
 # --- Apply Filters ---
 filtered_df = df.copy()
-if region_filter != "All":
-    filtered_df = filtered_df[filtered_df['region'] == region_filter]
-if expertise_filter:
-    filtered_df = filtered_df[filtered_df['expertise_tags'].apply(
-        lambda tags: isinstance(tags, list) and any(tag in tags for tag in expertise_filter)
-    )]
+
 if search_query:
     filtered_df = filtered_df[
         filtered_df['broker_name'].str.contains(search_query, case=False, na=False) |
@@ -59,7 +34,7 @@ if search_query:
     ]
 
 # --- Sorting ---
-if sort_option == "Leaderboard Score":
+if sort_option == "Leaderboard Score" and 'leaderboard_score' in filtered_df.columns:
     filtered_df = filtered_df.sort_values(by='leaderboard_score', ascending=False)
 elif sort_option == "Active Listings":
     filtered_df = filtered_df.sort_values(by='active_listings', ascending=False)
@@ -82,27 +57,23 @@ for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
     else:
         medal = f"{idx}."
 
-    # ✅ Safe tag formatting
-    tags = row.get('expertise_tags', [])
-    if not isinstance(tags, list):
-        tags = []
-    tags_formatted = " ".join([f"<code>{tag}</code>" for tag in tags])
+    # ✅ Company name with link
+    company_link = f'<a href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>' if pd.notnull(row["companyurl"]) and row["companyurl"].strip() else row["company_name"]
 
-    # 🔗 Broker name with optional link
-    url = row.get("companyUrl", "")
-    name = row["broker_name"]
-    if pd.notnull(url) and url.strip():
-        broker_display = f'<b>{medal} <a href="{url}" target="_blank">{name}</a></b>'
-    else:
-        broker_display = f'<b>{medal} {name}</b>'
+    # ✅ Listings link
+    listings_link = f'(<a href="{row["listings_url"]}" target="_blank">listings</a>)' if pd.notnull(row["listings_url"]) and row["listings_url"].strip() else ""
 
-    # 💬 Render card
+    # ✅ Broker name
+    broker_name = row["broker_name"]
+
+    # ✅ Active listings
+    active_listings = row["active_listings"]
+
+    # --- Render card ---
     st.markdown(f"""
 <div style='padding:10px; border:1px solid #444; border-radius:6px; margin-bottom:12px; font-size:14px; line-height:1.5'>
-{broker_display} <i>({row["region"]})</i> — <b>{row["leaderboard_score"]} pts</b><br>
-<span style='color:#aaa;'>{tags_formatted}</span><br>
-<strong>Active:</strong> {row["active_listings"]} &nbsp; | &nbsp;
-<strong>Sold (6mo):</strong> {row["sold_last_6_months"]} &nbsp; | &nbsp;
-<strong>Response:</strong> {row["response_score"]}%
+<b>{medal} {company_link} {listings_link}</b><br>
+<strong>{broker_name}</strong><br>
+Active Listings: <b>{active_listings}</b>
 </div>
 """, unsafe_allow_html=True)
