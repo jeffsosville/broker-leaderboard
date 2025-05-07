@@ -19,7 +19,7 @@ def load_data():
 
 df = load_data()
 filtered_df = df
-params = st.experimental_get_query_params()
+params = st.query_params
 broker_id = params.get('broker_id', [None])[0]
 
 
