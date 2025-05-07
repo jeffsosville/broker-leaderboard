@@ -20,14 +20,12 @@ def load_data():
     df = df.rename(columns={
         'name': 'broker_name',
         'company_name': 'company_name',
-        'listings_count': 'active_listings',
-        'nichetag': 'expertise_tags',
+        'listings_count': 'active_listings'
         'companyurl': 'companyurl',
         'listings_url': 'listings_url'
     })
 
     # Fill missing optional fields
-    df['expertise_tags'] = df['expertise_tags'].apply(lambda x: [x] if pd.notnull(x) else [])
     df['region'] = 'N/A'
     df['sold_last_6_months'] = 0
     df['response_score'] = 0
