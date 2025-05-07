@@ -83,6 +83,11 @@ st.markdown("""
         gap: 4px;
     }
 }
+@media (max-width: 600px) {
+    .company-title .company-link {
+        display: inline;  /* ✅ force inline on mobile */
+    }
+}
 
 </style>
 """, unsafe_allow_html=True)
