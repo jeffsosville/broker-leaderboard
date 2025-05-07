@@ -80,7 +80,8 @@ st.markdown("""
         display: inline-flex;
         white-space: nowrap;
         align-items: center;
-        gap: 4px;
+        gap: 2px;            
+        font-size: 12px;     
     }
 }
 @media (max-width: 600px) {
