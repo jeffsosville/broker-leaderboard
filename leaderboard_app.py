@@ -28,7 +28,7 @@ st.markdown("""
 <style>
 body { background: #f9f9f9; font-family: system-ui, sans-serif; color: #222; }
 h1 { color: orange; }
-.leaderboard-item { background:#fff; padding:20px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd; color: #222; }
+.leaderboard-item { background:#111; padding:20px; margin-bottom:15px; border-radius:8px; border:1px solid #333; color: #eee; }
 .company-link { font-weight: bold; color: #0077cc; text-decoration: none; }
 .company-link:hover { text-decoration: underline; }
 .listings-link { font-weight: bold; color: #FF6600; text-decoration: none; }
