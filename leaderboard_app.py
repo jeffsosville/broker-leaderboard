@@ -68,6 +68,12 @@ st.markdown("""
         display: block;
         margin-top: 4px;
     }
+.company-title {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
 
 </style>
 """, unsafe_allow_html=True)
