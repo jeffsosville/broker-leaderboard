@@ -20,12 +20,8 @@ state_list = supabase.table("all brokers").select("state").execute().data
 unique_states = sorted({r['state'].upper() for r in state_list if r['state']})
 state_filter = st.sidebar.selectbox("Filter by state", options=["All"] + unique_states)
 
-
 # --- Fetch Broker Data ---
-query = supabase.table("all brokers").select("*")
-if not show_all:
-    query = query.eq("is_featured", True)
-data = query.execute().data
+data = supabase.table("all brokers").select("*").execute().data
 
 df = pd.DataFrame(data)
 if df.empty:
@@ -42,7 +38,6 @@ if state_filter != "All":
 # --- Sort by Score ---
 df = df.sort_values(by='leaderboard_score', ascending=False, na_position='last').reset_index(drop=True)
 
-
 # --- Display Results ---
 for i, row in df.iterrows():
     rank = i + 1
@@ -54,7 +49,6 @@ for i, row in df.iterrows():
     sold = row.get('sold_listings', 0)
     score = row.get('leaderboard_score', 0)
     url = row.get('listings_url') or row.get('companyurl') or row.get('companyUrl') or "#"
-
 
     medal = ""
     if rank == 1:
