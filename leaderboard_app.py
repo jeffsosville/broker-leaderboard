@@ -11,15 +11,6 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(page_title="The Glengarry 100 Preview", layout="wide")
 st.title("\U0001F3C6 The Glengarry 100 Preview")
 
-# --- Sidebar Filters ---
-st.sidebar.header("Search & Filter")
-search_term = st.sidebar.text_input("Search all brokers or company name")
-
-# Get unique states for dropdown
-state_list = supabase.table("all brokers").select("state").execute().data
-unique_states = sorted({r['state'].upper() for r in state_list if r['state']})
-state_filter = st.sidebar.selectbox("Filter by state", options=["All"] + unique_states)
-
 # --- Fetch Broker Data ---
 data = supabase.table("all brokers").select("*").execute().data
 
@@ -28,19 +19,56 @@ if df.empty:
     st.warning("No broker data found.")
     st.stop()
 
-# --- Apply Filters ---
-if search_term:
-    df = df[df.apply(lambda row: search_term.lower() in str(row.get('broker_name', '')).lower() or search_term.lower() in str(row.get('company_name', '')).lower(), axis=1)]
-
-if state_filter != "All":
-    df = df[df['state'].str.upper() == state_filter]
-
-# --- Sort by Score ---
+# --- Sort by Score and Rank ---
 df = df.sort_values(by='leaderboard_score', ascending=False, na_position='last').reset_index(drop=True)
+df['rank'] = df.index + 1
+
+# --- Sidebar Filters ---
+st.sidebar.header("Search & Filter")
+search_term = st.sidebar.text_input("Search all brokers (by name or company)")
+
+# City filter
+city_filter = st.sidebar.multiselect(
+    "Filter by city",
+    options=sorted(df['city'].dropna().unique())
+)
+
+# State filter
+state_filter = st.sidebar.multiselect(
+    "Filter by state",
+    options=sorted(df['state'].dropna().str.upper().unique())
+)
+
+# Industry/niche filter (expertise_tag)
+industry_filter = st.sidebar.multiselect(
+    "Filter by industry/niche",
+    options=sorted(df['expertise_tag'].dropna().unique())
+)
+
+# --- Apply Filters ---
+df_filtered = df.copy()
+
+if search_term:
+    df_filtered = df_filtered[df_filtered.apply(
+        lambda row: search_term.lower() in str(row.get('broker_name', '')).lower() or
+                    search_term.lower() in str(row.get('company_name', '')).lower(), axis=1)]
+
+if city_filter:
+    df_filtered = df_filtered[df_filtered['city'].isin(city_filter)]
+
+if state_filter:
+    df_filtered = df_filtered[df_filtered['state'].str.upper().isin(state_filter)]
+
+if industry_filter:
+    df_filtered = df_filtered[df_filtered['expertise_tag'].isin(industry_filter)]
+
+# --- Limit to Top 100 if no search or filter active ---
+if not search_term and not city_filter and not state_filter and not industry_filter:
+    df_filtered = df_filtered.head(100)
 
 # --- Display Results ---
-for i, row in df.iterrows():
-    rank = i + 1
+for i, row in df_filtered.iterrows():
+    rank = row['rank']
     name = (row.get('company_name') or 'Unknown').title()
     broker = row.get('broker_name', '').title()
     location = f"{row.get('city', '').title()}, {row.get('state', '').upper()}"
@@ -65,5 +93,5 @@ for i, row in df.iterrows():
     </div>
     """, unsafe_allow_html=True)
 
-if df.empty:
+if df_filtered.empty:
     st.info("No matching brokers found.")
