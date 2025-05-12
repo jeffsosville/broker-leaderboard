@@ -10,7 +10,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- Streamlit Setup ---
 st.set_page_config(page_title="The Glengarry 100", layout="wide")
-st.title("\U0001F3C6 The Glengarry 100 Preview")
+st.title("\U0001F3C6 The Glengarry 100")
 
 # --- Fetch Broker Data ---
 data = supabase.table("all brokers").select("*").execute().data
