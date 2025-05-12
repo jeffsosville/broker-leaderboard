@@ -9,7 +9,7 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- Streamlit Setup ---
-st.set_page_config(page_title="The Glengarry 100 Preview", layout="wide")
+st.set_page_config(page_title="The Glengarry 100", layout="wide")
 st.title("\U0001F3C6 The Glengarry 100 Preview")
 
 # --- Fetch Broker Data ---
