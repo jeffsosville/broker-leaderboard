@@ -55,7 +55,8 @@ for i, row in df.iterrows():
     active = row.get('active_listings', 0)
     sold = row.get('sold_listings', 0)
     score = row.get('leaderboard_score', 0)
-    url = row.get('companyurl') or row.get('companyUrl') or "#"
+    url = row.get('listings_url') or row.get('companyurl') or row.get('companyUrl') or "#"
+
 
     medal = ""
     if rank == 1:
