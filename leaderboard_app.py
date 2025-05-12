@@ -20,8 +20,6 @@ state_list = supabase.table("all brokers").select("state").execute().data
 unique_states = sorted({r['state'].upper() for r in state_list if r['state']})
 state_filter = st.sidebar.selectbox("Filter by state", options=["All"] + unique_states)
 
-# Option to show all or just featured
-show_all = st.sidebar.checkbox("Show all brokers (not just Top 100)", value=False)
 
 # --- Fetch Broker Data ---
 query = supabase.table("all brokers").select("*")
