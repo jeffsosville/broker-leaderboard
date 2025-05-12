@@ -42,8 +42,8 @@ if state_filter != "All":
     df = df[df['state'].str.upper() == state_filter]
 
 # --- Sort by Score ---
-if 'leaderboard_score' in df.columns:
-    df = df.sort_values(by='leaderboard_score', ascending=False)
+df = df.sort_values(by='leaderboard_score', ascending=False, na_position='last').reset_index(drop=True)
+
 
 # --- Display Results ---
 for i, row in df.iterrows():
