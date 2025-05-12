@@ -1,128 +1,76 @@
 import streamlit as st
 import pandas as pd
-from supabase import create_client
-import os
-from dotenv import load_dotenv
+from supabase import create_client, Client
 
-# --- Load environment variables ---¯
-load_dotenv()
-SUPABASE_URL = f"https://{os.getenv('SUPABASE_HOST')}"
-SUPABASE_KEY = os.getenv('SUPABASE_API_KEY')
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+# --- Supabase Setup ---
+SUPABASE_URL = "https://rxbaimgjakefhxsaksdl.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4YmFpbWdqYWtlZmh4c2Frc2RsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjYyNjQ0OSwiZXhwIjoyMDYyMjAyNDQ5fQ.aFgdVDkCCjYLX8b6y03Cz85SGiq2FYB8auF4hgLimUs"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- Load Data ---
-@st.cache_data
-def load_data():
-    response = supabase.table('brokers_leaderboard').select("*").execute()
-    df = pd.DataFrame(response.data)
-    return df
+# --- Streamlit Setup ---
+st.set_page_config(page_title="The Glengarry 100 Preview", layout="wide")
+st.title("\U0001F3C6 The Glengarry 100 Preview")
 
-df = load_data()
-filtered_df = df
+# --- Sidebar Filters ---
+st.sidebar.header("Search & Filter")
+search_term = st.sidebar.text_input("Search broker or company name")
 
+# Get unique states for dropdown
+state_list = supabase.table("all brokers").select("state").execute().data
+unique_states = sorted({r['state'].upper() for r in state_list if r['state']})
+state_filter = st.sidebar.selectbox("Filter by state", options=["All"] + unique_states)
 
-# Sort by leaderboard_score descending
-df = df.sort_values(by='leaderboard_score', ascending=False).head(100)
+# Option to show all or just featured
+show_all = st.sidebar.checkbox("Show all brokers (not just Top 100)", value=False)
 
-st.set_page_config(page_title="The Glengarry 100", layout="wide")
-st.markdown("""
-<style>
-.leaderboard-item {
-    background: #111;
-    padding: 12px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    border: 1px solid #333;
-    color: #ddd;
-    font-size: 14px;
-    line-height: 1.4;
-}
+# --- Fetch Broker Data ---
+query = supabase.table("all brokers").select("*")
+if not show_all:
+    query = query.eq("is_featured", True)
+data = query.execute().data
 
-.company-link { 
-    font-weight: bold; 
-    color: #3399ff; 
-    text-decoration: none; 
-}
+df = pd.DataFrame(data)
+if df.empty:
+    st.warning("No broker data found.")
+    st.stop()
 
-.company-link:hover { 
-    text-decoration: underline; 
-}
+# --- Apply Filters ---
+if search_term:
+    df = df[df.apply(lambda row: search_term.lower() in str(row.get('broker_name', '')).lower() or search_term.lower() in str(row.get('company_name', '')).lower(), axis=1)]
 
-.listings-link { 
-    font-weight: bold; 
-    color: #FF6600; 
-    text-decoration: none; 
-}
+if state_filter != "All":
+    df = df[df['state'].str.upper() == state_filter]
 
-.rank-number { 
-    font-weight: bold; 
-    color: orange; 
-    margin-right: 4px; 
-}
+# --- Sort by Score ---
+if 'leaderboard_score' in df.columns:
+    df = df.sort_values(by='leaderboard_score', ascending=False)
 
-@media (max-width: 600px) {
-    .leaderboard-item {
-        font-size: 13px;
-        padding: 10px;
-    }
-    .company-link, .listings-link {
-        display: block;
-        margin-top: 4px;
-    }
-.company-title {
-    white-space: nowrap;
-    display: inline-flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 4px;
-}
-@media (max-width: 600px) {
-    .company-title {
-        display: inline-flex;
-        white-space: nowrap;
-        align-items: center;
-        gap: 2px;            
-        font-size: 12px;     
-    }
-}
-@media (max-width: 600px) {
-    .company-title .company-link {
-        display: inline;  /* ✅ force inline on mobile */
-    }
-}
+# --- Display Results ---
+for i, row in df.iterrows():
+    rank = i + 1
+    name = (row.get('company_name') or 'Unknown').title()
+    broker = row.get('broker_name', '').title()
+    location = f"{row.get('city', '').title()}, {row.get('state', '').upper()}"
+    phone = row.get('phone', '')
+    active = row.get('active_listings', 0)
+    sold = row.get('sold_listings', 0)
+    score = row.get('leaderboard_score', 0)
+    url = row.get('companyurl') or row.get('companyUrl') or "#"
 
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("<h1>🏆 The Glengarry 100</h1>", unsafe_allow_html=True)
-
-for idx, (_, row) in enumerate(filtered_df.iterrows(), start=1):
-    if idx == 1:
+    medal = ""
+    if rank == 1:
         medal = "🥇"
-    elif idx == 2:
+    elif rank == 2:
         medal = "🥈"
-    elif idx == 3:
+    elif rank == 3:
         medal = "🥉"
-    else:
-        medal = f"{idx}."
-
-    company_link = f'<a class="company-link" href="{row["companyurl"]}" target="_blank">{row["company_name"]}</a>'
-    listings_link = f'<a class="listings-link" href="{row["listings_url"]}" target="_blank">View Listings</a>'
-    city = row.get("city", "N/A")
-    state = row.get("state", "N/A")
-    phone = row.get("phone", "N/A")
 
     st.markdown(f"""
-    <div class="leaderboard-item">
-    <span class="company-title"><b>{medal} {company_link}</b></span>
-    | {city}, {state} | {phone}<br>
-    Active: {row["active_listings"]} | Sold: {row["sold_listings"]} | Score: {row["leaderboard_score"]} | {listings_link}
+    <div style='border:1px solid #333; padding:10px; border-radius:5px; margin-bottom:10px;'>
+        <b>{medal} {rank}. <a href='{url}' target='_blank'>{name}</a></b> | {location} | {phone}<br>
+        Active: {active} | Sold: {sold} | Score: {score} | <a href='{url}' target='_blank'>View Listings</a>
     </div>
     """, unsafe_allow_html=True)
 
-   
-
-
-
-
-
+if df.empty:
+    st.info("No matching brokers found.")
