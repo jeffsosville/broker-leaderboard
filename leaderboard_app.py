@@ -13,7 +13,7 @@ st.title("\U0001F3C6 The Glengarry 100 Preview")
 
 # --- Sidebar Filters ---
 st.sidebar.header("Search & Filter")
-search_term = st.sidebar.text_input("Search broker or company name")
+search_term = st.sidebar.text_input("Search all brokers or company name")
 
 # Get unique states for dropdown
 state_list = supabase.table("all brokers").select("state").execute().data
