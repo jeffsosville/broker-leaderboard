@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import ast
 from supabase import create_client, Client
 
 # --- Supabase Setup ---
@@ -23,6 +24,13 @@ if df.empty:
 df = df.sort_values(by='leaderboard_score', ascending=False, na_position='last').reset_index(drop=True)
 df['rank'] = df.index + 1
 
+# --- Clean and extract expertise_tags (array-like strings) ---
+if 'expertise_tags' in df.columns:
+    df['expertise_tags'] = df['expertise_tags'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else [])
+    all_tags = sorted(set(tag for sublist in df['expertise_tags'] for tag in sublist))
+else:
+    all_tags = []
+
 # --- Sidebar Filters ---
 st.sidebar.header("Search & Filter")
 search_term = st.sidebar.text_input("Search all brokers (by name or company)")
@@ -39,11 +47,10 @@ state_filter = st.sidebar.multiselect(
     options=sorted(df['state'].dropna().str.upper().unique())
 )
 
-# Industry/niche filter (expertise_tag), safely handle if column doesn't exist
-industry_options = df['expertise_tag'].dropna().unique() if 'expertise_tag' in df.columns else []
+# Industry/niche filter
 industry_filter = st.sidebar.multiselect(
     "Filter by industry/niche",
-    options=sorted(industry_options)
+    options=all_tags
 )
 
 # --- Apply Filters ---
@@ -60,8 +67,8 @@ if city_filter:
 if state_filter:
     df_filtered = df_filtered[df_filtered['state'].str.upper().isin(state_filter)]
 
-if industry_filter and 'expertise_tag' in df_filtered.columns:
-    df_filtered = df_filtered[df_filtered['expertise_tag'].isin(industry_filter)]
+if industry_filter:
+    df_filtered = df_filtered[df_filtered['expertise_tags'].apply(lambda tags: any(tag in tags for tag in industry_filter))]
 
 # --- Limit to Top 100 if no search or filter active ---
 if not search_term and not city_filter and not state_filter and not industry_filter:
