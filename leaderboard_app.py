@@ -39,10 +39,11 @@ state_filter = st.sidebar.multiselect(
     options=sorted(df['state'].dropna().str.upper().unique())
 )
 
-# Industry/niche filter (expertise_tag)
+# Industry/niche filter (expertise_tag), safely handle if column doesn't exist
+industry_options = df['expertise_tag'].dropna().unique() if 'expertise_tag' in df.columns else []
 industry_filter = st.sidebar.multiselect(
     "Filter by industry/niche",
-    options=sorted(df['expertise_tag'].dropna().unique())
+    options=sorted(industry_options)
 )
 
 # --- Apply Filters ---
@@ -59,7 +60,7 @@ if city_filter:
 if state_filter:
     df_filtered = df_filtered[df_filtered['state'].str.upper().isin(state_filter)]
 
-if industry_filter:
+if industry_filter and 'expertise_tag' in df_filtered.columns:
     df_filtered = df_filtered[df_filtered['expertise_tag'].isin(industry_filter)]
 
 # --- Limit to Top 100 if no search or filter active ---
