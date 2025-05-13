@@ -12,59 +12,49 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(page_title="The Glengarry 100", layout="wide")
 st.title("\U0001F3C6 The Glengarry 100")
 
-# --- Fetch Broker Data ---
-# --- Initial Fetch (Top 100) ---
-data = supabase.table("all brokers").select("*").range(0, 99).execute().data
+# --- Utility: Fetch in Chunks ---
+def fetch_all_brokers(table_name: str, total_rows: int = 7500, chunk_size: int = 1000):
+    brokers = []
+    for start in range(0, total_rows, chunk_size):
+        end = start + chunk_size - 1
+        response = supabase.table(table_name).select("*").range(start, end).execute()
+        brokers.extend(response.data or [])
+    return brokers
 
-# --- Sidebar Filters ---
+# --- Sidebar Filters (defined early to detect use) ---
 st.sidebar.header("Search & Filter")
 search_term = st.sidebar.text_input("Search all brokers (by name or company)")
 city_filter = st.sidebar.multiselect("Filter by city", options=[])
 state_filter = st.sidebar.multiselect("Filter by state", options=[])
 industry_filter = st.sidebar.multiselect("Filter by industry/niche", options=[])
 
-# --- If Filters Used, Fetch Full Data ---
+# --- Conditional Data Fetching ---
 if search_term or city_filter or state_filter or industry_filter:
-    data = supabase.table("all brokers").select("*").range(0, 7499).execute().data
+    data = fetch_all_brokers("all brokers", total_rows=7500)
+else:
+    data = supabase.table("all brokers").select("*").range(0, 99).execute().data
 
-
+# --- DataFrame Setup ---
 df = pd.DataFrame(data)
 if df.empty:
     st.warning("No broker data found.")
     st.stop()
 
-# --- Sort by Score and Rank ---
+# --- Sort & Rank ---
 df = df.sort_values(by='leaderboard_score', ascending=False, na_position='last').reset_index(drop=True)
 df['rank'] = df.index + 1
 
-# --- Clean and extract expertise_tags (array-like strings) ---
+# --- Parse expertise_tags field ---
 if 'expertise_tags' in df.columns:
     df['expertise_tags'] = df['expertise_tags'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else [])
     all_tags = sorted(set(tag for sublist in df['expertise_tags'] for tag in sublist))
 else:
     all_tags = []
 
-# --- Sidebar Filters ---
-st.sidebar.header("Search & Filter")
-search_term = st.sidebar.text_input("Search all brokers (by name or company)")
-
-# City filter
-city_filter = st.sidebar.multiselect(
-    "Filter by city",
-    options=sorted(df['city'].dropna().unique())
-)
-
-# State filter
-state_filter = st.sidebar.multiselect(
-    "Filter by state",
-    options=sorted(df['state'].dropna().str.upper().unique())
-)
-
-# Industry/niche filter
-industry_filter = st.sidebar.multiselect(
-    "Filter by industry/niche",
-    options=all_tags
-)
+# --- Update Filter Dropdowns with Data ---
+city_filter = st.sidebar.multiselect("Filter by city", options=sorted(df['city'].dropna().unique()), default=city_filter)
+state_filter = st.sidebar.multiselect("Filter by state", options=sorted(df['state'].dropna().str.upper().unique()), default=state_filter)
+industry_filter = st.sidebar.multiselect("Filter by industry/niche", options=all_tags, default=industry_filter)
 
 # --- Apply Filters ---
 df_filtered = df.copy()
@@ -83,11 +73,11 @@ if state_filter:
 if industry_filter:
     df_filtered = df_filtered[df_filtered['expertise_tags'].apply(lambda tags: any(tag in tags for tag in industry_filter))]
 
-# --- Limit to Top 100 if no search or filter active ---
+# --- Limit to Top 100 by Default ---
 if not search_term and not city_filter and not state_filter and not industry_filter:
     df_filtered = df_filtered.head(100)
 
-# --- Display Results ---
+# --- Display Brokers ---
 for i, row in df_filtered.iterrows():
     rank = row['rank']
     name = (row.get('company_name') or 'Unknown').title()
