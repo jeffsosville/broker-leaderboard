@@ -25,6 +25,8 @@ def fetch_all_brokers(table_name: str, total_rows: int = 7500, chunk_size: int =
             break
         brokers.extend(response.data)
     st.write(f"✅ Fetched {len(brokers)} brokers total.")
+    st.write(f"✅ Chunk fetched: {start}-{end} → {len(response.data)} records")
+
     return brokers
 
 # --- Sidebar Filters ---
