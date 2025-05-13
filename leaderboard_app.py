@@ -10,7 +10,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- Streamlit Setup ---
 st.set_page_config(page_title="The Glengarry 100", layout="wide")
-st.title("\U0001F3C6 The Glengarry 100")
+st.title("🏆 The Glengarry 100")
 
 # --- Fetch Brokers in Chunks (DEBUG + CACHED) ---
 @st.cache_data(show_spinner=True)
@@ -21,12 +21,10 @@ def fetch_all_brokers(table_name: str, total_rows: int = 7500, chunk_size: int =
         st.write(f"🔄 Fetching rows {start} to {end}")
         response = supabase.table(table_name).select("*").range(start, end).execute()
         if not response.data:
-            st.write(f"⛔ No data returned for range {start}-{end}, stopping.")
+            st.warning(f"⛔ No data returned from range {start}–{end}.")
             break
         brokers.extend(response.data)
     st.write(f"✅ Fetched {len(brokers)} brokers total.")
-    st.write(f"✅ Chunk fetched: {start}-{end} → {len(response.data)} records")
-
     return brokers
 
 # --- Sidebar Filters ---
@@ -36,15 +34,16 @@ city_filter = st.sidebar.multiselect("Filter by city", options=[])
 state_filter = st.sidebar.multiselect("Filter by state", options=[])
 industry_filter = st.sidebar.multiselect("Filter by industry/niche", options=[])
 
-# --- Conditional Fetching Based on Filter ---
+# --- Detect Filter Usage ---
 search_active = search_term or city_filter or state_filter or industry_filter
 
+# --- Fetch Broker Data ---
 if search_active:
-    st.info("Loading full broker list for search/filter...")
-    data = fetch_all_brokers("all brokers", total_rows=7500)
+    st.info("🔍 Loading full broker list for search/filter...")
+    data = fetch_all_brokers("all_brokers", total_rows=7500)
 else:
-    st.info("Loading quick top 100 brokers...")
-    data = supabase.table("all brokers").select("*").range(0, 99).execute().data
+    st.info("🚀 Loading top 100 brokers...")
+    data = supabase.table("all_brokers").select("*").range(0, 99).execute().data
     st.write(f"✅ Loaded {len(data)} brokers.")
 
 # --- DataFrame Setup ---
@@ -64,12 +63,12 @@ if 'expertise_tags' in df.columns:
 else:
     all_tags = []
 
-# --- Update Sidebar Filters After Data Load ---
+# --- Update Sidebar Filters with Real Data ---
 city_filter = st.sidebar.multiselect("Filter by city", options=sorted(df['city'].dropna().unique()), default=city_filter)
 state_filter = st.sidebar.multiselect("Filter by state", options=sorted(df['state'].dropna().str.upper().unique()), default=state_filter)
 industry_filter = st.sidebar.multiselect("Filter by industry/niche", options=all_tags, default=industry_filter)
 
-# --- Apply Filters ---
+# --- Apply Filtering ---
 df_filtered = df.copy()
 
 if search_term:
@@ -86,12 +85,12 @@ if state_filter:
 if industry_filter:
     df_filtered = df_filtered[df_filtered['expertise_tags'].apply(lambda tags: any(tag in tags for tag in industry_filter))]
 
-# --- Limit to Top 100 If No Filter Active ---
+# --- Limit to Top 100 if No Filters ---
 if not search_active:
     df_filtered = df_filtered.head(100)
 
 # --- Display Brokers ---
-for i, row in df_filtered.iterrows():
+for _, row in df_filtered.iterrows():
     rank = row['rank']
     name = (row.get('company_name') or 'Unknown').title()
     broker = row.get('broker_name', '').title()
