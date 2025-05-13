@@ -29,7 +29,7 @@ def fetch_all_brokers(table_name: str, total_rows: int = 7500, chunk_size: int =
 
 # --- Sidebar Filters ---
 st.sidebar.header("Search & Filter")
-search_term = st.sidebar.text_input("Search all brokers (by name or company)")
+search_term = st.sidebar.text_input("Search all_brokers (by name or company)")
 city_filter = st.sidebar.multiselect("Filter by city", options=[])
 state_filter = st.sidebar.multiselect("Filter by state", options=[])
 industry_filter = st.sidebar.multiselect("Filter by industry/niche", options=[])
