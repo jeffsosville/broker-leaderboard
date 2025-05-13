@@ -8,12 +8,10 @@ SUPABASE_URL = "https://rxbaimgjakefhxsaksdl.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4YmFpbWdqYWtlZmh4c2Frc2RsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjYyNjQ0OSwiZXhwIjoyMDYyMjAyNDQ5fQ.aFgdVDkCCjYLX8b6y03Cz85SGiq2FYB8auF4hgLimUs"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- Streamlit Setup ---
 st.set_page_config(page_title="The Glengarry 100", layout="wide")
 st.title("🏆 The Glengarry 100")
 
-# --- Broker Fetcher (chunked) ---
-@st.cache_data(show_spinner=True)
+# --- Chunked broker fetch ---
 def fetch_all_brokers(table_name="all_brokers", total_rows=7500, chunk_size=1000):
     brokers = []
     for start in range(0, total_rows, chunk_size):
@@ -31,42 +29,35 @@ city_filter = st.sidebar.multiselect("Filter by city", options=[])
 state_filter = st.sidebar.multiselect("Filter by state", options=[])
 industry_filter = st.sidebar.multiselect("Filter by industry/niche", options=[])
 
-# --- Determine if full fetch needed ---
 search_active = any([search_term, city_filter, state_filter, industry_filter])
 
-# --- Fetch Data ---
+# --- Fetch brokers ---
 if search_active:
-    st.info("🔍 Loading full broker list for search/filter...")
-    data = fetch_all_brokers("all_brokers", total_rows=7500)
+    data = fetch_all_brokers("all_brokers")
 else:
-    st.info("🚀 Loading top 100 brokers...")
     data = supabase.table("all_brokers").select("*").range(0, 99).execute().data
 
-st.write(f"✅ Brokers loaded: {len(data)}")
-
-# --- Convert to DataFrame ---
 df = pd.DataFrame(data)
 if df.empty:
     st.warning("No broker data found.")
     st.stop()
 
-# --- Rank and Sort ---
-df = df.sort_values(by='leaderboard_score', ascending=False, na_position='last').reset_index(drop=True)
+df = df.sort_values(by='leaderboard_score', ascending=False).reset_index(drop=True)
 df['rank'] = df.index + 1
 
 # --- Parse tags ---
 if 'expertise_tags' in df.columns:
     df['expertise_tags'] = df['expertise_tags'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) and x.startswith("[") else [])
-    all_tags = sorted(set(tag for tags in df['expertise_tags'] for tag in tags))
+    all_tags = sorted(set(tag for sublist in df['expertise_tags'] for tag in sublist))
 else:
     all_tags = []
 
-# --- Re-render Filters after data load ---
+# --- Update dropdowns ---
 city_filter = st.sidebar.multiselect("Filter by city", options=sorted(df['city'].dropna().unique()), default=city_filter)
 state_filter = st.sidebar.multiselect("Filter by state", options=sorted(df['state'].dropna().str.upper().unique()), default=state_filter)
 industry_filter = st.sidebar.multiselect("Filter by industry/niche", options=all_tags, default=industry_filter)
 
-# --- Apply filters ---
+# --- Apply Filters ---
 df_filtered = df.copy()
 
 if search_term:
@@ -83,7 +74,7 @@ if state_filter:
 if industry_filter:
     df_filtered = df_filtered[df_filtered['expertise_tags'].apply(lambda tags: any(tag in tags for tag in industry_filter))]
 
-# --- Default to Top 100 if no filters
+# --- Limit top 100 by default
 if not search_active:
     df_filtered = df_filtered.head(100)
 
@@ -100,12 +91,9 @@ for _, row in df_filtered.iterrows():
     url = row.get('listings_url') or row.get('companyurl') or row.get('companyUrl') or "#"
 
     medal = ""
-    if rank == 1:
-        medal = "🥇"
-    elif rank == 2:
-        medal = "🥈"
-    elif rank == 3:
-        medal = "🥉"
+    if rank == 1: medal = "🥇"
+    elif rank == 2: medal = "🥈"
+    elif rank == 3: medal = "🥉"
 
     st.markdown(f"""
     <div style='border:1px solid #333; padding:10px; border-radius:5px; margin-bottom:10px;'>
