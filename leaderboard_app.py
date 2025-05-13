@@ -13,7 +13,20 @@ st.set_page_config(page_title="The Glengarry 100", layout="wide")
 st.title("\U0001F3C6 The Glengarry 100")
 
 # --- Fetch Broker Data ---
-data = supabase.table("all brokers").select("*").execute().data
+# --- Initial Fetch (Top 100) ---
+data = supabase.table("all brokers").select("*").range(0, 99).execute().data
+
+# --- Sidebar Filters ---
+st.sidebar.header("Search & Filter")
+search_term = st.sidebar.text_input("Search all brokers (by name or company)")
+city_filter = st.sidebar.multiselect("Filter by city", options=[])
+state_filter = st.sidebar.multiselect("Filter by state", options=[])
+industry_filter = st.sidebar.multiselect("Filter by industry/niche", options=[])
+
+# --- If Filters Used, Fetch Full Data ---
+if search_term or city_filter or state_filter or industry_filter:
+    data = supabase.table("all brokers").select("*").range(0, 7499).execute().data
+
 
 df = pd.DataFrame(data)
 if df.empty:
